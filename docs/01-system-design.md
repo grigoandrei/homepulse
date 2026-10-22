@@ -18,9 +18,9 @@ The backend is written by Andrei in Java with Spring Boot as a learning project.
 
 | Topic | Decision |
 |---|---|
-| Health input | Third party export apps push JSON to our API |
+| Health input | Life Dashboard Companion pushes JSON to our API. Same format from Android and iPhone |
 | Spending input | Open Banking aggregator. Provider to be picked in a spike |
-| Hosting | Home server with Docker Compose. Access over Tailscale only |
+| Hosting | Home server with Podman Compose. Access over Tailscale only |
 | Shape | Modular monolith. One Spring Boot app |
 | First views | Each person alone. Both side by side. Spending summary |
 
@@ -29,14 +29,14 @@ The backend is written by Andrei in Java with Spring Boot as a learning project.
 ```mermaid
 flowchart TB
     subgraph phones["Phones"]
-        android["Android phone<br/>Health Connect export app"]
-        iphone["iPhone<br/>Health Auto Export"]
+        android["Android phone<br/>Life Dashboard Companion"]
+        iphone["iPhone<br/>Life Dashboard Companion"]
     end
 
     browser["Browser"]
     bank["Bank aggregator<br/>Open Banking API"]
 
-    subgraph server["Home server · Docker Compose"]
+    subgraph server["Home server · Podman Compose"]
         subgraph api["Spring Boot API"]
             people["people module<br/>users and device tokens"]
             health["health module<br/>ingest and query sleep, workouts"]
@@ -63,8 +63,8 @@ flowchart TB
 
 ### Stack
 
-- Java 21
-- Spring Boot 3 with Gradle
+- Java 25
+- Spring Boot 4 with Gradle Groovy DSL
 - Spring Data JPA and Flyway
 - PostgreSQL
 - JUnit 5 and Testcontainers
@@ -75,7 +75,7 @@ flowchart TB
 ```
 person          id, name
 device          id, person_id, platform, token_hash, last_seen_at
-raw_ingest      id, device_id, received_at, payload as jsonb, status, error
+raw_ingest      id, device_id, received_at, sequence, payload as jsonb, status, error
 
 sleep_session   id, person_id, start_at, end_at, minutes, source, external_id
 workout         id, person_id, type, start_at, end_at, minutes,
@@ -87,8 +87,9 @@ bank_txn        id, connection_id, external_id, booked_at,
 ```
 
 - **Store raw first.** Every push is saved as is in `raw_ingest` and then parsed. A parser bug can be fixed and the data replayed.
-- **Idempotent writes.** A unique key on `person_id + source + external_id` makes repeated pushes harmless.
-- **One shape for both phones.** Each platform has a small mapper. Both output the same `SleepSession` and `Workout` records.
+- **Idempotent writes.** A unique key on `person_id + source + external_id` makes repeated pushes harmless. The `external_id` is the record `uuid` from the payload.
+- **Edits and deletes.** The app resends edited records with the same `uuid`. So writes are upserts. Ids in the `deleted_records` array remove the matching row.
+- **One shape for both phones.** Both phones send the same JSON. The payload `source` is `health_connect` or `healthkit_ios`. Small differences such as exercise type names are handled in one mapper per source. Both output the same `SleepSession` and `Workout` records.
 - **Time and money.** Times are UTC `Instant`. Money is `BigDecimal` plus currency.
 - **Category** comes from the bank at first.
 
@@ -99,7 +100,7 @@ bank_txn        id, connection_id, external_id, booked_at,
 1. Phone sends `POST /api/ingest/{platform}` with its token.
 2. A security filter hashes the token and finds the device and person. A bad token gets 401.
 3. The raw JSON is saved to `raw_ingest` with status `RECEIVED`.
-4. The matching mapper parses it into sleep and workout rows. Inserts skip duplicates.
+4. The matching mapper parses it into sleep and workout rows. Writes are upserts by `external_id`.
 5. The row is marked `PARSED`. On failure it is marked `FAILED` with the error text. The phone still gets 202 since the data is safe.
 6. A replay endpoint reparses `FAILED` rows after a bug fix.
 
@@ -122,7 +123,7 @@ bank_txn        id, connection_id, external_id, booked_at,
 
 - Device tokens are stored hashed.
 - Bank keys come from env vars.
-- Postgres is reachable only inside Docker.
+- Postgres is reachable only inside the compose network.
 
 ## 4. Testing and build order
 
@@ -138,14 +139,14 @@ bank_txn        id, connection_id, external_id, booked_at,
 | # | Milestone | You learn |
 |---|---|---|
 | 0 | Spikes. Pick Android export app and bank aggregator. Save sample payloads | Reading API docs |
-| 1 | Skeleton. Spring Boot app, Postgres in Docker, Flyway, health check | Boot, Gradle, config, profiles |
+| 1 | Skeleton. Spring Boot app, Postgres in Podman, Flyway, health check | Boot, Gradle, config, profiles |
 | 2 | People and device tokens | JPA entities, repositories, Spring Security filters |
 | 3 | iPhone ingest | Controllers, Jackson, transactions, idempotency |
 | 4 | Android ingest | Interfaces, dependency injection, strategy pattern |
 | 5 | Read APIs and dashboard v1. Claude builds the UI | Query design, DTOs, validation |
 | 6 | Bank sync | RestClient, OAuth, `@Scheduled`, retries |
 | 7 | Spending summary and dashboard v2 | Aggregation queries |
-| 8 | Deploy to home server with Tailscale | Docker images, env config |
+| 8 | Deploy to home server with Tailscale | Container images, env config |
 
 Health comes before the bank on purpose. The bank signup may take time so milestone 0 starts it early.
 
@@ -160,5 +161,7 @@ Health comes before the bank on purpose. The bank signup may take time so milest
 Both are handled in milestone 0.
 
 
-- Pick the Android export app. Check it can push to a custom URL.
+- Android export app is Life Dashboard Companion. See [02-m0-android-spike.md](02-m0-android-spike.md).
+- iPhone: buy the app for €6.99 or build it in Xcode.
+- The app requires HTTPS. Use `tailscale serve` on the home server to get a trusted cert.
 - Pick the bank aggregator. Check it accepts personal developer signups and supports Revolut in our country.
