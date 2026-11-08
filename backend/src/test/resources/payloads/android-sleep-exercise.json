@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-04T07:15:02.481Z",
+  "app_version": "1.28.0",
+  "source": "health_connect",
+  "sequence": 1842,
+  "timezone": "Europe/Berlin",
+  "daily_totals": [
+    { "date": "2026-10-04", "steps": 1204, "total_calories": 702.9 }
+  ],
+  "sleep": [
+    {
+      "uuid": "6f1c2a9e-0b7d-4c1e-9a52-3d8e5f7a1b01",
+      "source": "com.sec.android.app.shealth",
+      "session_end_time": "2026-10-04T05:30:00Z",
+      "duration_seconds": 27000,
+      "stages": [
+        { "stage": "light", "start_time": "2026-10-03T22:00:00Z", "end_time": "2026-10-03T23:30:00Z", "duration_seconds": 5400 },
+        { "stage": "deep", "start_time": "2026-10-03T23:30:00Z", "end_time": "2026-10-04T01:00:00Z", "duration_seconds": 5400 },
+        { "stage": "rem", "start_time": "2026-10-04T01:00:00Z", "end_time": "2026-10-04T02:30:00Z", "duration_seconds": 5400 },
+        { "stage": "awake", "start_time": "2026-10-04T02:30:00Z", "end_time": "2026-10-04T02:45:00Z", "duration_seconds": 900 },
+        { "stage": "sleeping", "start_time": "2026-10-04T02:45:00Z", "end_time": "2026-10-04T05:30:00Z", "duration_seconds": 9900 }
+      ]
+    },
+    {
+      "uuid": "6f1c2a9e-0b7d-4c1e-9a52-3d8e5f7a1b02",
+      "source": "com.sec.android.app.shealth",
+      "session_end_time": "2026-10-04T14:30:00Z",
+      "duration_seconds": 1800,
+      "stages": []
+    }
+  ],
+  "exercise": [
+    {
+      "uuid": "9a4b7c2d-1e3f-4a5b-8c6d-7e8f9a0b1c01",
+      "source": "com.sec.android.app.shealth",
+      "type": "56",
+      "name": "running",
+      "title": "Morning run",
+      "start_time": "2026-10-04T07:00:00Z",
+      "end_time": "2026-10-04T07:45:00Z",
+      "duration_seconds": 2700
+    },
+    {
+      "uuid": "9a4b7c2d-1e3f-4a5b-8c6d-7e8f9a0b1c02",
+      "source": "com.sec.android.app.shealth",
+      "type": "999",
+      "start_time": "2026-10-04T18:00:00Z",
+      "end_time": "2026-10-04T18:30:00Z",
+      "duration_seconds": 1800
+    }
+  ],
+  "deleted_records": [
+    { "type": "exercise", "id": "9a4b7c2d-1e3f-4a5b-8c6d-7e8f9a0b1c99" }
+  ]
+}
