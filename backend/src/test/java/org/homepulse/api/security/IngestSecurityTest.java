@@ -1,6 +1,7 @@
 package org.homepulse.api.security;
 
 import org.homepulse.api.TestcontainersConfiguration;
+import org.homepulse.api.health.RawIngestRepository;
 import org.homepulse.api.people.Device;
 import org.homepulse.api.people.DeviceRepository;
 import org.homepulse.api.people.DeviceTokens;
@@ -43,6 +44,9 @@ class IngestSecurityTest {
     @Autowired
     private DeviceTokens tokens;
 
+    @Autowired
+    private RawIngestRepository rawIngests;
+
     @BeforeEach
     void saveDevice() {
         Person person = people.save(new Person("Test person"));
@@ -51,6 +55,7 @@ class IngestSecurityTest {
 
     @AfterEach
     void cleanUp() {
+        rawIngests.deleteAll();
         devices.deleteAll();
         people.deleteAll();
     }

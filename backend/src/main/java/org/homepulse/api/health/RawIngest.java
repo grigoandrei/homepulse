@@ -57,6 +57,10 @@ public class RawIngest {
         return error;
     }
 
+    public Long getSequence() {
+        return sequence;
+    }
+
     public void markParsed() {
         this.status = IngestStatus.PARSED;
         this.error = null;
